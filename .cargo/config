@@ -1,0 +1,11 @@
+[target.thumbv7em-none-eabi]
+runner = "dk-run"
+rustflags = [
+  "-C", "link-arg=-Tlink.x",
+]
+
+[build]
+target = "thumbv7em-none-eabi" # = ARM Cortex-M4
+
+[alias]
+flash-nrf = ["flash", "--chip", "nRF52840_xxAA"]

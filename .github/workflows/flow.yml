@@ -1,0 +1,81 @@
+name: Suite
+
+on:
+  push:
+    branches:
+      - root
+    tags:
+      - v*
+  pull_request: {}
+
+env:
+  RELEASE: true
+  CHECK: true
+
+jobs:
+  suite:
+    name: Suite
+    runs-on: ubuntu-20.04
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cargo cache restore
+        id: cargo-cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "::set-output name=dir::$(pip cache dir)"
+      - name: Pip cache restore
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Run CI make task
+        run: make --trace ci
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: junctor
+          path: target/thumbv7em-none-eabi/release/junctor
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: CHANGELOG.md
+          path: CHANGELOG.md
+
+      - name: Cut a release if needed
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: cut_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body_path: CHANGELOG.md
+          draft: true
+          prerelease: false
+      
+      - name: Upload release if needed
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.cut_release.outputs.upload_url }}
+          asset_path: target/thumbv7em-none-eabi/release/junctor
+          asset_name: junctor
+          asset_content_type: application/octet-stream
