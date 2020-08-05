@@ -1,7 +1,7 @@
 
 ## Configurables.
 export BIN ?= junctor ## Main binary name.
-export ARCH ?= thumbv7em-none-eabi ## Rust compile target.
+export ARCH ?= thumbv7em-none-eabihf ## Rust compile target.
 export CHIP ?= nRF52840_xxAA ## Flash/embed target.
 export RELEASE ?= false ## Release mode.
 export CHECK ?= false ## Prefer checks to mutations.
@@ -74,7 +74,7 @@ clean: ## Clean up the working environment.
 ##@ Hardware
 .PHONY := run flash embed recover
 
-run: rust-target-${ARCH} ## Run the binary.
+run: apt-qemu-system-arm rust-target-${ARCH} ## Run the binary.
 	cargo run ${MAYBE_RELEASE_FLAG} --bin ${BIN}
 
 flash: rust-target-${ARCH} tool-cargo-flash ## Flash the device.

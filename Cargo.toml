@@ -10,11 +10,13 @@ repository = "https://github.com/Hoverbear-Consulting/junctor"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cortex-m = "0.6.2"
-cortex-m-rt = "0.6.12"
-heapless = "0.5.5"
+cortex-m = "0.6.0"
+cortex-m-rt = "0.6.10"
+cortex-m-semihosting = "0.3.3"
+rtt-target = { version = "0.2.0", features = ["cortex-m"] }
+nrf52840-pac = "0.9.0"
+panic-halt = "0.2.0"
 log = "0.4.8"
-dk = { git = "https://github.com/ferrous-systems/embedded-trainings-2020.git", features = ["beginner"] }
 
 # optimize code in both profiles
 [profile.dev]
