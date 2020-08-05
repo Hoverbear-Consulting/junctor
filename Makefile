@@ -47,10 +47,10 @@ help: ## Print this message.
 	@printf -- "${FORMATTING_BEGIN_HEADING}Usage${FORMATTING_END}\n"
 	@printf -- "  ${FORMATTING_BEGIN_COMMAND}make${FORMATTING_END} ${FORMATTING_BEGIN_TASK}<task>${FORMATTING_END} ${FORMATTING_BEGIN_KNOBS}[RELEASE=true CHECK=true ...]${FORMATTING_END} \n"
 	@printf -- "\n"
-	@printf -- "${FORMATTING_BEGIN_HEADING}Knobs${FORMATTING_END}                         ${FORMATTING_BEGIN_HINT}Configured  Default              Description${FORMATTING_END}\n"
+	@printf -- "${FORMATTING_BEGIN_HEADING}Knobs${FORMATTING_END}                           ${FORMATTING_BEGIN_HINT}Configured  Default              Description${FORMATTING_END}\n"
 	${AWK} -f hack/variables.awk $(MAKEFILE_LIST)
 	@printf -- "\n"
-	@printf -- "${FORMATTING_BEGIN_HEADING}Tasks${FORMATTING_END}                               ${FORMATTING_BEGIN_HINT}Task${FORMATTING_END} ${FORMATTING_BEGIN_HINT}Description${FORMATTING_END}\n"
+	@printf -- "${FORMATTING_BEGIN_HEADING}Tasks${FORMATTING_END}                                       ${FORMATTING_BEGIN_HINT}Description${FORMATTING_END}\n"
 	${AWK} -f hack/targets.awk $(MAKEFILE_LIST)
 
 ##@ Code
@@ -72,7 +72,7 @@ clean: ## Clean up the working environment.
 	cargo clean
 
 ##@ Hardware
-.PHONY := flash embed
+.PHONY := run flash embed recover
 
 run: rust-target-${ARCH} ## Run the binary.
 	cargo run ${MAYBE_RELEASE_FLAG} --bin ${BIN}
@@ -101,7 +101,7 @@ lint: rust-target-${ARCH} rust-component-clippy ## Run linting pass.
 conventional: tool-convco ## Ensures the commits are all conventional.
 	convco check
 
-version: tool-convco apt-jq apt-gawk ## Sync version to Cargo
+version: tool-convco apt-jq apt-gawk ## Sync version to Cargo.
 	$(eval override CARGO_VERSION = $(shell cargo pkgid | gawk --file hack/version.awk))
 	$(eval override CONVCO_VERSION = $(shell convco version))
 	$(if $(findstring true,$(CHECK)),@test "${CARGO_VERSION}" = "${CONVCO_VERSION}",)
@@ -119,34 +119,34 @@ release-needed: tool-convco ## Determine if a release is needed.
 .PHONY := commit-build commit-chore commit-ci commit-docs commit-feat commit-fix commit-perf commit-refactor commit-style commit-test push
 
 commit-build: changelog version ## Make a build change.
-	@convco commit --build -- --patch
+	convco commit --build -- --patch
 
 commit-chore: changelog version ## Make a chore change.
-	@convco commit --chore -- --patch
+	convco commit --chore -- --patch
 
 commit-ci: changelog version ## Make a ci change.
-	@convco commit --ci -- --patch
+	convco commit --ci -- --patch
 
 commit-docs: changelog version ## Make a docs change.
-	@convco commit --docs -- --patch
+	convco commit --docs -- --patch
 
 commit-feat: changelog version ## Make a feat change.
-	@convco commit --feat -- --patch
+	convco commit --feat -- --patch
 
 commit-fix: changelog version ## Make a fix change.
-	@convco commit --fix -- --patch
+	convco commit --fix -- --patch
 
 commit-perf: changelog version ## Make a perf change.
-	@convco commit --perf -- --patch
+	convco commit --perf -- --patch
 
 commit-refactor: changelog version ## Make a refactor change.
-	@convco commit --refactor -- --patch
+	convco commit --refactor -- --patch
 
 commit-style: changelog version ## Make a style change.
-	@convco commit --style -- --patch
+	convco commit --style -- --patch
 
 commit-test: changelog version ## Make a test change.
-	@convco commit --test -- --patch
+	convco commit --test -- --patch
 
 push: FORCE ?= true
 push: ## Push the latest code & tags.
@@ -157,7 +157,7 @@ push: ## Push the latest code & tags.
 
 changelog: tool-convco ## Update the changelog.
 	$(if $(findstring true,$(CHECK)),@convco check,)
-	@convco changelog > CHANGELOG.md
+	convco changelog > CHANGELOG.md
 	$(if $(findstring true,$(CHECK)),,@test -z "$(git ls-files CHANGELOG.md --modified)")
 	$(if $(findstring true,$(CHECK)),,@git add CHANGELOG.md)
 	$(if $(findstring true,$(CHECK)),@git restore CHANGELOG.md,)
@@ -199,7 +199,7 @@ ci: prerequisites format lint build changelog ## Run the CI pass locally.
 prerequisites: inject-hooks ## Bootstrap the machine.
 	$(if $(findstring true,$(PREREQS)),@bash ./distribution/bootstraps/ubuntu-20.04.sh,)
 	# We just always need this.
-	@rustup +stable component add llvm-tools-preview
+	rustup +stable component add llvm-tools-preview
 
 ##@ Hooks
 .PHONY := inject-hooks hook-pre-commit
@@ -217,16 +217,16 @@ hook-pre-commit: ci
 
 apt-%: override PACKAGE = $(@:apt-%=%)
 apt-%:
-	$(if $(findstring true,$(PREREQS)),@sudo apt install ${PACKAGE} --yes -qqq,)
+	$(if $(findstring true,$(PREREQS)),sudo apt install ${PACKAGE} --yes -qqq,)
 
 tool-%: override TOOL = $(@:tool-%=%)
 tool-%:
-	$(if $(findstring true,$(PREREQS)),@cargo install ${TOOL} --quiet,)
+	$(if $(findstring true,$(PREREQS)),cargo install ${TOOL} --quiet,)
 
 rust-component-%: override COMPONENT = $(@:rust-component-%=%)
 rust-component-%:
-	$(if $(findstring true,$(PREREQS)),@rustup +stable component add ${COMPONENT},)
+	$(if $(findstring true,$(PREREQS)),rustup component add ${COMPONENT},)
 
 rust-target-%: override ARCH = $(@:rust-target-%=%)
 rust-target-%:
-	$(if $(findstring true,$(PREREQS)),@rustup +stable target add ${ARCH},)
+	$(if $(findstring true,$(PREREQS)),rustup target add ${ARCH},)
