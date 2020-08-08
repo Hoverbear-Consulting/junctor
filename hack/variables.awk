@@ -2,7 +2,7 @@ BEGIN {};
 
 # Variables
 match($0, /^export ([a-zA-Z_-]+) \?= (.*) ## (.*?)/, matches) {
-    printf "  %s%-20s%s %s%20s%s %s%-20s%s %-20s\n",
+    printf "  %s%-2 10s%s %s%25s%s %s%-25s%s %-25s\n",
         FORMATTING_BEGIN_KNOBS,
         matches[1],
         FORMATTING_END,

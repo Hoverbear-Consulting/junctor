@@ -10,7 +10,7 @@ match($0, /^##@ (.*?)/, matches) {
 
 # Tasks
 match($0, /^([a-zA-Z0-9_-]+): ?(.*?) ## (.*?)/, matches) {
-    printf "   %s%-40s%s %-20s\n",
+    printf "   %s%-35s%s %-20s\n",
         FORMATTING_BEGIN_TASK,
         matches[1],
         FORMATTING_END,
