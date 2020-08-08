@@ -1,9 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-08-05)
+## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-08-08)
 
 ### Features
 
+* **makefile:** Documentation generation enabled. 9bbeb7d
 * Remove training wheels! d18cc8d
 
 

@@ -157,7 +157,13 @@ push: ## Push the latest code & tags.
 	git push --follow-tag $(if $(findstring true,$(FORCE)),--force,)
 
 ##@ Releasing
-.PHONY := changelog release update reset
+.PHONY := readme changelog release update reset
+
+readme: tool-cargo-readme ## Update the changelog.
+	cargo readme > README.md
+	$(if $(findstring true,$(CHECK)),,@test -z "$(git ls-files README.md --modified)")
+	$(if $(findstring true,$(CHECK)),,@git add README.md)
+	$(if $(findstring true,$(CHECK)),@git restore README.md,)
 
 changelog: tool-convco ## Update the changelog.
 	$(if $(findstring true,$(CHECK)),@convco check,)
@@ -198,7 +204,7 @@ reset: # (Hidden from users) This resets the repo completely back to a squashed 
 ##@ Provisioning
 .PHONY := ci prerequisites
 
-ci: prerequisites format lint build document changelog ## Run the CI pass locally.
+ci: prerequisites format lint build document readme changelog ## Run the CI pass locally.
 
 prerequisites: inject-hooks ## Bootstrap the machine.
 	$(if $(findstring true,$(PREREQS)),@bash ./distribution/bootstraps/ubuntu-20.04.sh,)
