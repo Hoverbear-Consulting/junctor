@@ -2,20 +2,6 @@
 
 set -e
 
-sudo apt update --yes -qqq
-sudo apt install --yes -qqq \
-    gawk \
-    make \
-    build-essential \
-    pkg-config \
-    libusb-1.0-0-dev \
-    libudev-dev \
-    libssl-dev \
-    python3-pip
-
-./distribution/bootstraps/components/rust.sh
-./distribution/bootstraps/components/python.sh
-
 cat <<-EOF | sudo dd of=/etc/udev/rules.d/50-nRF52840.rules
 # udev rules to allow access to USB devices as a non-root user
 

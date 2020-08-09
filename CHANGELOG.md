@@ -4,6 +4,7 @@
 
 ### Features
 
+* **makefile:** README.md generation is automatic now. 4674135
 * **makefile:** Documentation generation enabled. 9bbeb7d
 * Remove training wheels! d18cc8d
 

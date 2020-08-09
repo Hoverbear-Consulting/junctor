@@ -81,13 +81,13 @@ clean: ## Clean up the working environment.
 run: apt-qemu-system-arm rust-target-${ARCH} ## Run the binary.
 	cargo run ${MAYBE_RELEASE_FLAG} --bin ${BIN}
 
-flash: rust-target-${ARCH} tool-cargo-flash ## Flash the device.
+flash: rust-target-${ARCH} pip3-nrfutil tool-cargo-flash ## Flash the device.
 	cargo flash ${MAYBE_RELEASE_FLAG} --chip ${CHIP}
 
-embed: rust-target-${ARCH} tool-cargo-embed ## Embed into the device.
+embed: rust-target-${ARCH} pip3-nrfutil tool-cargo-embed ## Embed into the device.
 	cargo embed ${MAYBE_RELEASE_FLAG}
 
-recover: tool-nrf-recover ## Recover the nRF device.
+recover: tool-nrf-recover pip3-nrfutil ## Recover the nRF device.
 	nrf-recover -y
 
 ##@ Validation
@@ -206,8 +206,10 @@ reset: # (Hidden from users) This resets the repo completely back to a squashed 
 
 ci: prerequisites format lint build document readme changelog ## Run the CI pass locally.
 
-prerequisites: inject-hooks ## Bootstrap the machine.
+prerequisites: export PATH += ":${HOME}/.cargo/bin"
+prerequisites: apt-gawk apt-make apt-build-essential apt-pkg-config apt-libusb-1.0-0-dev apt-libudev-dev apt-libssl-dev apt-python3-pip inject-hooks ## Bootstrap the machine.
 	$(if $(findstring true,$(PREREQS)),@bash ./distribution/bootstraps/ubuntu-20.04.sh,)
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet
 	# We just always need this.
 	rustup +stable component add llvm-tools-preview
 
@@ -223,11 +225,16 @@ inject-hooks: ## Inject the git hooks used.
 hook-pre-commit: override CHECK = true
 hook-pre-commit: ci
 
+# Tools
 .PHONY := apt-% tool-% rust-component-% rust-target-%
 
 apt-%: override PACKAGE = $(@:apt-%=%)
 apt-%:
 	$(if $(findstring true,$(PREREQS)),sudo apt install ${PACKAGE} --yes -qqq,)
+
+pip3-%: override PACKAGE = $(@:pip3-%=%)
+pip3-%: apt-python3-pip
+	$(if $(findstring true,$(PREREQS)),pip3 install ${PACKAGE} --user -qqq,)
 
 tool-%: override TOOL = $(@:tool-%=%)
 tool-%:
