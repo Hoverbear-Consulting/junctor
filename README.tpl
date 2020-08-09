@@ -17,7 +17,3 @@ If you want to mentor me and/or others who might get involved, I'd love it if yo
 
 * Please commit using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). I provide Git hooks and Make targets to help you, please use them!
 * Please don't get mad if I say something isn't in scope and close it! I'm just hacking!
-
-## Code of Conduct
-
-You're welcome to try out, interact with, or contribute to, or derive from this repo anything you wish, but if you make this project not fun for anyone working on it, you will be immediately banned without recourse or discussion.
