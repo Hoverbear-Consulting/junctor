@@ -93,7 +93,7 @@ recover: tool-nrf-recover pip3-nrfutil ## Recover the nRF device.
 ##@ Validation
 .PHONY := audit format lint conventional version release-needed
 
-audit: tool-cargo-audit rust-target-${ARCH} ## Audit the  depenencies.
+audit: tool-cargo-audit rust-target-${ARCH} ## Audit the dependencies.
 	cargo audit
 
 format: rust-target-${ARCH} rust-component-rustfmt ## Run formatting pass.
@@ -204,7 +204,7 @@ reset: # (Hidden from users) This resets the repo completely back to a squashed 
 ##@ Provisioning
 .PHONY := ci prerequisites
 
-ci: prerequisites format lint build document readme changelog ## Run the CI pass locally.
+ci: prerequisites format lint audit conventional version readme changelog build document ## Run the CI pass locally.
 
 prerequisites: export PATH += ":${HOME}/.cargo/bin"
 prerequisites: apt-gawk apt-make apt-build-essential apt-pkg-config apt-libusb-1.0-0-dev apt-libudev-dev apt-libssl-dev apt-python3-pip inject-hooks ## Bootstrap the machine.
