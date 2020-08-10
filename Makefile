@@ -8,7 +8,7 @@ export BIN ?= junctor ## Main binary name.
 export ARCH ?= thumbv7em-none-eabihf ## Rust compile target.
 export CHANNEL ?= nightly ## Rust channel to use.
 export CHIP ?= nRF52840_xxAA ## Flash/embed target.
-export OS ?= ubuntu-20.04 ## The hosting OS. (Only ubuntu-20.04 is supported.)
+export OS ?= ubuntu-20.04 ## The hosting OS. (ubuntu-20.04 is supported.)
 
 # Pretty stuff!
 FORMATTING_BEGIN_TASK = \033[0;33m
@@ -51,7 +51,7 @@ help: ## Print this message.
 	@printf -- "${FORMATTING_BEGIN_HEADING}Usage${FORMATTING_END}\n"
 	@printf -- "  ${FORMATTING_BEGIN_COMMAND}make${FORMATTING_END} ${FORMATTING_BEGIN_TASK}<task>${FORMATTING_END} ${FORMATTING_BEGIN_KNOBS}[RELEASE=true CHECK=true ...]${FORMATTING_END} \n"
 	@printf -- "\n"
-	@printf -- "${FORMATTING_BEGIN_HEADING}Knobs${FORMATTING_END}                      ${FORMATTING_BEGIN_HINT}Configured  Default                   Description${FORMATTING_END}\n"
+	@printf -- "${FORMATTING_BEGIN_HEADING}Knobs${FORMATTING_END}                       ${FORMATTING_BEGIN_HINT}Configured Default                   Description${FORMATTING_END}\n"
 	${AWK} -f hack/variables.awk $(MAKEFILE_LIST)
 	@printf -- "\n"
 	@printf -- "${FORMATTING_BEGIN_HEADING}Tasks${FORMATTING_END}                                  ${FORMATTING_BEGIN_HINT}Description${FORMATTING_END}\n"
