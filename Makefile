@@ -6,6 +6,7 @@ export CHECK ?= false ## Prefer checks to mutations.
 export PREREQS ?= true ## Provision preresuites as needed.
 export BIN ?= junctor ## Main binary name.
 export ARCH ?= thumbv7em-none-eabihf ## Rust compile target.
+export CHANNEL ?= nightly ## Rust channel to use.
 export CHIP ?= nRF52840_xxAA ## Flash/embed target.
 export OS ?= ubuntu-20.04 ## The hosting OS. (Only ubuntu-20.04 is supported.)
 
@@ -37,6 +38,8 @@ override BUILD_MODE = $(if $(findstring true,$(RELEASE)),release,debug)
 override MAYBE_RELEASE_FLAG = $(if $(findstring true,$(RELEASE)),--release,)
 override MAYBE_CHECK_FLAG = $(if $(findstring true,$(CHECK)),--check,)
 override ROOT_DIR = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+override CARGO = cargo +$(strip ${CHANNEL})
+override CANONICAL_TOOLCHAIN = $(strip ${CHANNEL})-$(strip ${ARCH})
 
 help: ## Print this message.
 	@printf -- "\n"
@@ -57,35 +60,35 @@ help: ## Print this message.
 ##@ Code
 .PHONY := build format
 
-build: rust-target-${ARCH} ## Build the binary.
-	cargo build ${MAYBE_RELEASE_FLAG}
+build: rust-target-${ARCH} rust-component-rust-std  ## Build the binary.
+	${CARGO} build ${MAYBE_RELEASE_FLAG}
 
-document: rust-target-${ARCH} ## Document the code.
-	cargo doc $(if $(findstring true,$(OPEN)),--open,)
+document: rust-target-${ARCH} rust-component-rust-std  ## Document the code.
+	${CARGO} doc $(if $(findstring true,$(OPEN)),--open,)
 
 size: tool-cargo-binutils ## Show size of code.
-	cargo size ${MAYBE_RELEASE_FLAG} --bin ${BIN}
+	${CARGO} size ${MAYBE_RELEASE_FLAG} --bin ${BIN}
 
 bloat: tool-cargo-bloat ## Show bloat in code
-	cargo bloat ${MAYBE_RELEASE_FLAG} --bin ${BIN}
+	${CARGO} bloat ${MAYBE_RELEASE_FLAG} --bin ${BIN}
 
 fetch: ## Fetch a local copy of the dependencies.
-	cargo fetch
+	${CARGO} fetch
 
 clean: ## Clean up the working environment.
-	cargo clean
+	${CARGO} clean
 
 ##@ Hardware
 .PHONY := run flash embed recover
 
-run: apt-qemu-system-arm rust-target-${ARCH} ## Run the binary.
-	cargo run ${MAYBE_RELEASE_FLAG} --bin ${BIN}
+run: apt-qemu-system-arm rust-target-${ARCH} rust-component-rust-std ## Run the binary.
+	${CARGO} run ${MAYBE_RELEASE_FLAG} --bin ${BIN}
 
-flash: rust-target-${ARCH} pip3-nrfutil tool-cargo-flash ## Flash the device.
-	cargo flash ${MAYBE_RELEASE_FLAG} --chip ${CHIP}
+flash: rust-target-${ARCH} rust-component-rust-std pip3-nrfutil tool-cargo-flash ## Flash the device.
+	${CARGO} flash ${MAYBE_RELEASE_FLAG} --chip ${CHIP}
 
-embed: rust-target-${ARCH} pip3-nrfutil tool-cargo-embed ## Embed into the device.
-	cargo embed ${MAYBE_RELEASE_FLAG}
+embed: rust-target-${ARCH} rust-component-rust-std pip3-nrfutil tool-cargo-embed ## Embed into the device.
+	${CARGO} embed ${MAYBE_RELEASE_FLAG}
 
 recover: tool-nrf-recover pip3-nrfutil ## Recover the nRF device.
 	nrf-recover -y
@@ -94,26 +97,26 @@ recover: tool-nrf-recover pip3-nrfutil ## Recover the nRF device.
 .PHONY := audit format lint conventional version release-needed
 
 audit: tool-cargo-audit rust-target-${ARCH} ## Audit the dependencies.
-	cargo audit
+	${CARGO} audit
 
 format: rust-target-${ARCH} rust-component-rustfmt ## Run formatting pass.
-	cargo fmt -- ${MAYBE_CHECK_FLAG}
+	${CARGO} fmt -- ${MAYBE_CHECK_FLAG}
 
 lint: rust-target-${ARCH} rust-component-clippy ## Run linting pass.
-	cargo clippy
+	${CARGO} clippy
 
 conventional: tool-convco ## Ensures the commits are all conventional.
 	convco check
 
 version: tool-convco apt-jq apt-gawk ## Sync version to Cargo.
-	$(eval override CARGO_VERSION = $(shell cargo pkgid | gawk --file hack/version.awk))
+	$(eval override CARGO_VERSION = $(shell ${CARGO} pkgid | gawk --file hack/version.awk))
 	$(eval override CONVCO_VERSION = $(shell convco version))
 	$(if $(findstring true,$(CHECK)),@test "${CARGO_VERSION}" = "${CONVCO_VERSION}",)
 	$(if $(findstring true,$(CHECK)),,@sed -i 's/version = "${CARGO_VERSION}"/version = "${CONVCO_VERSION}"/g' Cargo.toml)
 	$(if $(findstring true,$(CHECK)),,@git add Cargo.toml)
 
 release-needed: tool-convco ## Determine if a release is needed.
-	$(eval override CARGO_VERSION = $(shell cargo pkgid | gawk --file hack/version.awk))
+	$(eval override CARGO_VERSION = $(shell ${CARGO} pkgid | gawk --file hack/version.awk))
 	$(eval override CONVCO_VERSION = $(shell convco version))
 	$(eval override NEW_CONVCO_VERSION = $(shell convco version --bump))
 	# Make sure this is required.
@@ -160,7 +163,7 @@ push: ## Push the latest code & tags.
 .PHONY := readme changelog release update reset
 
 readme: tool-cargo-readme ## Update the changelog.
-	cargo readme > README.md
+	${CARGO} readme > README.md
 	$(if $(findstring true,$(CHECK)),,@test -z "$(git ls-files README.md --modified)")
 	$(if $(findstring true,$(CHECK)),,@git add README.md)
 	$(if $(findstring true,$(CHECK)),@git restore README.md,)
@@ -173,7 +176,7 @@ changelog: tool-convco ## Update the changelog.
 	$(if $(findstring true,$(CHECK)),@git restore CHANGELOG.md,)
 
 release: release-needed ## Cut a release, if required.
-	$(eval override CARGO_VERSION = $(shell cargo pkgid | gawk --file hack/version.awk))
+	$(eval override CARGO_VERSION = $(shell ${CARGO} pkgid | gawk --file hack/version.awk))
 	$(eval override CONVCO_VERSION = $(shell convco version))
 	$(eval override NEW_CONVCO_VERSION = $(shell convco version --bump))
 	sed -i 's/version = "${CARGO_VERSION}"/version = "${NEW_CONVCO_VERSION}"/g' Cargo.toml
@@ -191,7 +194,7 @@ release: release-needed ## Cut a release, if required.
 	rm MESSAGE
 
 update: ## Update all dependencies.
-	cargo update
+	${CARGO} update
 
 reset: # (Hidden from users) This resets the repo completely back to a squashed commit with a tagged version.
 	@echo -n "This is going to do some bad stuff. Why would you do this? Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
@@ -238,12 +241,16 @@ pip3-%: apt-python3-pip
 
 tool-%: override TOOL = $(@:tool-%=%)
 tool-%:
-	$(if $(findstring true,$(PREREQS)),cargo install ${TOOL} --quiet,)
+	$(if $(findstring true,$(PREREQS)),${CARGO} install ${TOOL} --quiet,)
+
+rust-toolchain-%: override TOOLCHAIN = $(@:rust-toolchain-%=%)
+rust-toolchain-%:
+	$(if $(findstring true,$(PREREQS)),rustup toolchain install ${TOOLCHAIN},)
 
 rust-component-%: override COMPONENT = $(@:rust-component-%=%)
 rust-component-%:
-	$(if $(findstring true,$(PREREQS)),rustup component add ${COMPONENT},)
+	$(if $(findstring true,$(PREREQS)),rustup component add ${COMPONENT} --toolchain ${CHANNEL},)
 
 rust-target-%: override ARCH = $(@:rust-target-%=%)
-rust-target-%:
-	$(if $(findstring true,$(PREREQS)),rustup target add ${ARCH},)
+rust-target-%: rust-toolchain-${CHANNEL}
+	$(if $(findstring true,$(PREREQS)),rustup target add ${ARCH} --toolchain ${CHANNEL},)

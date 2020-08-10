@@ -1,6 +1,3 @@
-#![no_std]
-#![no_main]
-
 //! Right now, this is just a project that is slowly evolving as I learn through some material.
 //!
 //! > This is a project for [nRF52840-DK](https://www.mouser.ca/ProductDetail/Nordic-Semiconductor/nRF52840-DK?qs=F5EMLAvA7IA76ZLjlwrwMw%3D%3D).
@@ -22,50 +19,57 @@
 //! If you're on Ubuntu 20.04, these should all just work and I'd love it if you reported a bug if they didn't.
 //!
 //! 😊
+#![no_std]
+#![no_main]
+#![feature(alloc_error_handler)]
 
-use cortex_m_rt::entry;
-use log::Log;
-use panic_halt as _;
-use rtt_target::{rprintln, rtt_init_print};
+extern crate alloc;
 
-#[entry]
-fn main() -> ! {
-    nrf52840_pac::Peripherals::take();
+#[global_allocator]
+static ALLOCATOR: alloc_cortex_m::CortexMHeap = alloc_cortex_m::CortexMHeap::empty();
+const HEAP_SIZE: usize = 1024 * 20;
 
-    rtt_init_print!();
-
-    log::set_logger(&Logger).unwrap();
-
-    if log::max_level() == log::LevelFilter::Off {
-        log::set_max_level(log::LevelFilter::Info)
-    }
-
-    log::info!("Initializing the board");
-
-    loop {
-        // your code goes here
-    }
+pub mod build_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
 
-struct Logger;
+mod diagnostics;
+mod subscriber;
 
-impl Log for Logger {
-    fn enabled(&self, metadata: &log::Metadata) -> bool {
-        metadata.level() <= log::STATIC_MAX_LEVEL
-    }
+#[cortex_m_rt::entry]
+fn main() -> ! {
+    unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
 
-    fn log(&self, record: &log::Record) {
-        if !self.enabled(record.metadata()) {
-            return;
+    nrf52840_pac::Peripherals::take();
+    let rtt_channels = rtt_target::rtt_init! {
+        up: {
+            0: {
+                size: 10240
+                mode: BlockIfFull
+                name: "Terminal"
+            }
         }
+    };
+    let rtt_channels_logger = rtt_channels.up.0;
+    let subscriber = subscriber::Subscriber::new(
+        rtt_channels_logger,
+        tracing::level_filters::LevelFilter::TRACE,
+    );
+    tracing::subscriber::set_global_default(subscriber).expect("global default was already set!");
+    diagnostics::start_message();
 
-        rprintln!(
-            "{}:{} -- {}",
-            record.level(),
-            record.target(),
-            record.args()
-        );
-    }
+    diagnostics::halt_message();
+    loop {}
+}
 
-    fn flush(&self) {}
+#[alloc_error_handler]
+fn alloc_error(_layout: core::alloc::Layout) -> ! {
+    cortex_m::asm::bkpt();
+    loop {}
+}
+
+#[panic_handler]
+fn panic(info: &core::panic::PanicInfo) -> ! {
+    tracing::event!(tracing::Level::ERROR, ?info, "Panicked!");
+    loop {}
 }
