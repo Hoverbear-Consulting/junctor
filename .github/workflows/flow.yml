@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: junctor
-          path: target/thumbv7em-none-eabi/release/junctor
+          path: target/thumbv7em-none-eabihf/release/junctor
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
@@ -76,6 +76,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.cut_release.outputs.upload_url }}
-          asset_path: target/thumbv7em-none-eabi/release/junctor
+          asset_path: target/thumbv7em-none-eabihf/release/junctor
           asset_name: junctor
           asset_content_type: application/octet-stream

@@ -1,9 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-08-09)
+## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-08-10)
 
 ### Features
 
+* **logging:** Minimal tracing support. 4d053c7
 * **makefile:** README.md generation is automatic now. 4674135
 * **makefile:** Documentation generation enabled. 9bbeb7d
 * Remove training wheels! d18cc8d
