@@ -108,11 +108,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "compiler_builtins"
-version = "0.1.32"
-source = "git+https://github.com/rust-lang-nursery/compiler-builtins#f3846bc05da87b8a71cd1a5a6ff9d980f46b2d0f"
-
-[[package]]
 name = "cortex-m"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -143,15 +138,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "cortex-m-semihosting"
-version = "0.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "113ef0ecffee2b62b58f9380f4469099b30e9f9cbee2804771b4203ba1762cfa"
-dependencies = [
- "cortex-m",
 ]
 
 [[package]]
@@ -238,16 +224,12 @@ dependencies = [
  "built",
  "cortex-m",
  "cortex-m-rt",
- "cortex-m-semihosting",
  "fnv",
  "indexmap",
  "nrf52840-pac",
  "once_cell",
  "rtt-target",
- "test",
  "tracing",
- "utest-cortex-m-qemu",
- "utest-macros",
 ]
 
 [[package]]
@@ -394,12 +376,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sc"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ebbb026ba4a707c25caec2db5ef59ad8b41f7ad77cad06257e06229c891f376"
-
-[[package]]
 name = "semver"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -460,11 +436,6 @@ dependencies = [
  "quote",
  "unicode-xid",
 ]
-
-[[package]]
-name = "test"
-version = "0.1.0"
-source = "git+https://github.com/japaric/utest#70dd2f2c1b6b38ed203c031b487d67507e26fae8"
 
 [[package]]
 name = "time"
@@ -565,20 +536,6 @@ dependencies = [
  "matches",
  "percent-encoding",
 ]
-
-[[package]]
-name = "utest-cortex-m-qemu"
-version = "0.1.0"
-source = "git+https://github.com/japaric/utest#70dd2f2c1b6b38ed203c031b487d67507e26fae8"
-dependencies = [
- "compiler_builtins",
- "sc",
-]
-
-[[package]]
-name = "utest-macros"
-version = "0.1.0"
-source = "git+https://github.com/japaric/utest#70dd2f2c1b6b38ed203c031b487d67507e26fae8"
 
 [[package]]
 name = "vcell"
