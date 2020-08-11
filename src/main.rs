@@ -22,19 +22,25 @@
 #![no_std]
 #![no_main]
 #![feature(alloc_error_handler)]
+#![warn(missing_docs)]
 
 extern crate alloc;
 
+/// The global allocator for the node.
 #[global_allocator]
 static ALLOCATOR: alloc_cortex_m::CortexMHeap = alloc_cortex_m::CortexMHeap::empty();
-const HEAP_SIZE: usize = 1024 * 20;
+
+/// The configured heap size of the node.
+const HEAP_SIZE: usize = 10 * 1024;
 
 pub mod build_info {
+    //! Compile-time build info.
+
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
 
-mod diagnostics;
-mod subscriber;
+pub mod diagnostics;
+pub mod subscriber;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -51,7 +57,7 @@ fn main() -> ! {
         }
     };
     let rtt_channels_logger = rtt_channels.up.0;
-    let subscriber = subscriber::Subscriber::new(
+    let subscriber = subscriber::rtt::Subscriber::new(
         rtt_channels_logger,
         tracing::level_filters::LevelFilter::TRACE,
     );
@@ -62,12 +68,13 @@ fn main() -> ! {
     loop {}
 }
 
+/// When facing an alloc error, we likely can't print. So we have to bail.
 #[alloc_error_handler]
 fn alloc_error(_layout: core::alloc::Layout) -> ! {
-    cortex_m::asm::bkpt();
     loop {}
 }
 
+/// When panicking, attempt to log it, else bail.
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     tracing::event!(tracing::Level::ERROR, ?info, "Panicked!");

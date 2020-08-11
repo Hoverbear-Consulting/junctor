@@ -5,7 +5,8 @@ authors = ["Ana Hobden <operator@hoverbear.org>"]
 edition = "2018"
 description = "Nothing quite yet!"
 license = "MIT"
-repository = "https://github.com/Hoverbear-Consulting/junctor"
+repository = "github.com/Hoverbear-Consulting/junctor"
+homepage = "junctor.radio"
 build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -19,6 +20,8 @@ rtt-target = { version = "0.2.0", features = ["cortex-m"] }
 nrf52840-pac = "0.9.0"
 once_cell = { version = "1.4.0", default-features = false }
 tracing = { version = "0.1.13", default-features = false, features = ["attributes"] }
+indexmap = { version = "1.5.1", default-features = false }
+fnv = { version = "1.0.7", default-features = false }
 
 [build-dependencies]
 built = { version = "0.4", default-features = false, features = ["git2", "chrono", "semver", "nightly"] }
