@@ -40,6 +40,7 @@ override MAYBE_CHECK_FLAG = $(if $(findstring true,$(CHECK)),--check,)
 override ROOT_DIR = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 override CARGO = cargo +$(strip ${CHANNEL})
 override CANONICAL_TOOLCHAIN = $(strip ${CHANNEL})-$(strip ${ARCH})
+export PATH += $(if $(findstring true,$(PREREQS)),:${HOME}/.cargo/bin,)
 
 help: ## Print this message.
 	@printf -- "\n"
@@ -209,12 +210,8 @@ reset: # (Hidden from users) This resets the repo completely back to a squashed 
 
 ci: prerequisites format lint audit conventional version readme changelog build document ## Run the CI pass locally.
 
-prerequisites: export PATH += ":${HOME}/.cargo/bin"
-prerequisites: apt-gawk apt-make apt-build-essential apt-pkg-config apt-libusb-1.0-0-dev apt-libudev-dev apt-libssl-dev apt-python3-pip inject-hooks ## Bootstrap the machine.
+prerequisites: apt-gawk apt-make apt-curl apt-git apt-build-essential apt-pkg-config apt-libusb-1.0-0-dev apt-libudev-dev apt-libssl-dev apt-python3-pip rustup rust-component-llvm-tools-preview inject-hooks ## Bootstrap the machine.
 	$(if $(findstring true,$(PREREQS)),@bash ./distribution/bootstraps/ubuntu-20.04.sh,)
-	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet
-	# We just always need this.
-	rustup +stable component add llvm-tools-preview
 
 ##@ Hooks
 .PHONY := inject-hooks hook-pre-commit
@@ -229,7 +226,7 @@ hook-pre-commit: override CHECK = true
 hook-pre-commit: ci
 
 # Tools
-.PHONY := apt-% tool-% rust-component-% rust-target-%
+.PHONY := apt-% tool-% rust-component-% rust-toolchain-% rust-target-% rustup
 
 apt-%: override PACKAGE = $(@:apt-%=%)
 apt-%:
@@ -248,9 +245,12 @@ rust-toolchain-%:
 	$(if $(findstring true,$(PREREQS)),rustup toolchain install ${TOOLCHAIN},)
 
 rust-component-%: override COMPONENT = $(@:rust-component-%=%)
-rust-component-%:
+rust-component-%: rust-toolchain-${CHANNEL}
 	$(if $(findstring true,$(PREREQS)),rustup component add ${COMPONENT} --toolchain ${CHANNEL},)
 
 rust-target-%: override ARCH = $(@:rust-target-%=%)
 rust-target-%: rust-toolchain-${CHANNEL}
 	$(if $(findstring true,$(PREREQS)),rustup target add ${ARCH} --toolchain ${CHANNEL},)
+
+rustup:
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet
