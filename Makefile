@@ -253,4 +253,4 @@ rust-target-%: rust-toolchain-${CHANNEL}
 	$(if $(findstring true,$(PREREQS)),rustup target add ${ARCH} --toolchain ${CHANNEL},)
 
 rustup:
-	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet
+	$(if $(findstring true,$(PREREQS)),curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet,)
