@@ -22,6 +22,4 @@ fn main() {
         .write_all(include_bytes!("memory.x"))
         .unwrap();
     println!("cargo:rustc-link-search={}", out.display());
-
-    built::write_built_file().expect("Failed to acquire build-time information");
 }

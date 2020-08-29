@@ -5,20 +5,16 @@
 pub fn start_message() {
     tracing::event!(
         tracing::Level::INFO,
-        package = crate::build_info::PKG_NAME,
-        version = crate::build_info::PKG_VERSION,
-        author = crate::build_info::PKG_AUTHORS,
-        website = crate::build_info::PKG_HOMEPAGE,
-        description = crate::build_info::PKG_DESCRIPTION,
-        build.profile = crate::build_info::PROFILE,
-        build.utc = crate::build_info::BUILT_TIME_UTC,
-        build.rustc = crate::build_info::RUSTC_VERSION,
-        build.opt = crate::build_info::OPT_LEVEL,
-        build.sha = crate::build_info::GIT_COMMIT_HASH.unwrap_or("None"),
+        package = env!("CARGO_PKG_NAME"),
+        version = env!("CARGO_PKG_VERSION"),
+        author = env!("CARGO_PKG_AUTHORS"),
+        website = env!("CARGO_PKG_HOMEPAGE"),
+        description = env!("CARGO_PKG_DESCRIPTION"),
     );
 }
 
 /// Print the halt message for when the node has chosen to halt.
+#[tracing::instrument]
 pub fn halt_message() {
     tracing::event!(
         tracing::Level::INFO,

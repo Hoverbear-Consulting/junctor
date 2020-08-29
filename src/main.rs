@@ -33,12 +33,6 @@ static ALLOCATOR: alloc_cortex_m::CortexMHeap = alloc_cortex_m::CortexMHeap::emp
 /// The configured heap size of the node.
 const HEAP_SIZE: usize = 10 * 1024;
 
-pub mod build_info {
-    //! Compile-time build info.
-
-    include!(concat!(env!("OUT_DIR"), "/built.rs"));
-}
-
 pub mod diagnostics;
 pub mod subscriber;
 

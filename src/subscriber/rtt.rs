@@ -7,7 +7,9 @@ use core::{
     fmt::{self, Write},
     sync::atomic::Ordering,
 };
+use serde_json::json;
 use tracing::{field, span, Event, Level, Metadata};
+use tracing_serde::AsSerde;
 
 /// An rtt_target based subscriber.
 ///
@@ -80,20 +82,7 @@ impl tracing::Subscriber for Subscriber {
         self.enabled(level)
     }
 
-    fn new_span(&self, span: &span::Attributes) -> span::Id {
-        let meta = span.metadata();
-        let level = meta.level();
-
-        let _ = write!(*self.terminal_channel.borrow_mut(), "{} ", level);
-        let _ = write!(*self.terminal_channel.borrow_mut(), "{}", meta.name());
-        {
-            let mut visitor = Visitor {
-                writer: &mut *self.terminal_channel.borrow_mut(),
-                seen: true,
-            };
-            span.record(&mut visitor);
-        }
-
+    fn new_span(&self, attrs: &span::Attributes) -> span::Id {
         // Overflowing is fine here... We've almost certainly handled the other span.
         let id = self.next_id.fetch_add(1, Ordering::Acquire);
         // But if we do overflow, we need to increment again to make sure our SpanID isn't 0.
@@ -103,44 +92,61 @@ impl tracing::Subscriber for Subscriber {
             id
         };
 
-        let _ = (*self.terminal_channel.borrow_mut()).write_str("\n");
+        let json_value = json!({
+            "new_span": {
+                "attributes": AsSerde::as_serde(attrs),
+                "id": id,
+            }
+        });
+        let json_str = serde_json::to_string(&json_value).unwrap();
+        let _ = (*self.terminal_channel.borrow_mut()).write_str(&(json_str + "\n"));
+
         span::Id::from_u64(id as u64)
     }
 
-    fn record(&self, _span: &span::Id, _values: &span::Record) {
-        // TODO
-        // let _ = write!(*self.terminal_channel.borrow_mut(), "record");
+    fn record(&self, span: &span::Id, values: &span::Record) {
+        let json_value = json!({
+            "record": {
+                "span": AsSerde::as_serde(span),
+                "values": AsSerde::as_serde(values),
+            },
+        });
+        let json_str = serde_json::to_string(&json_value).unwrap();
+        let _ = (*self.terminal_channel.borrow_mut()).write_str(&(json_str + "\n"));
     }
 
-    fn record_follows_from(&self, _span: &span::Id, _follows: &span::Id) {
-        // TODO
-        // let _ = write!(*self.terminal_channel.borrow_mut(), "record_follows_from");
+    fn record_follows_from(&self, span: &span::Id, follows: &span::Id) {
+        let json_value = json!({
+            "record_follows_from": {
+                "span": AsSerde::as_serde(span),
+                "follows": AsSerde::as_serde(follows),
+            },
+        });
+        let json_str = serde_json::to_string(&json_value).unwrap();
+        let _ = (*self.terminal_channel.borrow_mut()).write_str(&(json_str + "\n"));
     }
 
     fn event(&self, event: &Event) {
-        let meta = event.metadata();
-        let level = meta.level();
-
-        let _ = write!(*self.terminal_channel.borrow_mut(), "{} ", level);
-
-        let _ = write!(*self.terminal_channel.borrow_mut(), "{}: ", meta.target());
-        {
-            let mut visitor = Visitor {
-                writer: &mut *self.terminal_channel.borrow_mut(),
-                seen: false,
-            };
-            event.record(&mut visitor);
-        }
-        let _ = (*self.terminal_channel.borrow_mut()).write_str("\n");
+        let json_value = json!({
+            "event": AsSerde::as_serde(event),
+        });
+        let json_str = serde_json::to_string(&json_value).unwrap();
+        let _ = (*self.terminal_channel.borrow_mut()).write_str(&(json_str + "\n"));
     }
 
-    fn enter(&self, _span: &span::Id) {
-        // TODO
-        // let _ = write!(*self.terminal_channel.borrow_mut(), "enter");
+    fn enter(&self, span: &span::Id) {
+        let json_value = json!({
+            "enter": AsSerde::as_serde(span),
+        });
+        let json_str = serde_json::to_string(&json_value).unwrap();
+        let _ = (*self.terminal_channel.borrow_mut()).write_str(&(json_str + "\n"));
     }
 
-    fn exit(&self, _span: &span::Id) {
-        // TODO
-        // let _ = write!(*self.terminal_channel.borrow_mut(), "exit");
+    fn exit(&self, span: &span::Id) {
+        let json_value = json!({
+            "exit": AsSerde::as_serde(span),
+        });
+        let json_str = serde_json::to_string(&json_value).unwrap();
+        let _ = (*self.terminal_channel.borrow_mut()).write_str(&(json_str + "\n"));
     }
 }

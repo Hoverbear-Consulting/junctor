@@ -1,9 +1,14 @@
 # Changelog
 
-## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-08-19)
+## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-08-29)
+
+### ⚠ BREAKING CHANGE
+
+* **makefile:** `make embed` has been removed in favor of `make run`.
 
 ### Features
 
+* **makefile:** Adopted probe-run as the runner. 87e73e1
 * **logging:** Minimal tracing support. 4d053c7
 * **makefile:** README.md generation is automatic now. 4674135
 * **makefile:** Documentation generation enabled. 9bbeb7d
