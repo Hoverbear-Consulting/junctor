@@ -82,14 +82,11 @@ clean: ## Clean up the working environment.
 ##@ Hardware
 .PHONY := run flash embed recover
 
-run: apt-qemu-system-arm rust-target-${ARCH} rust-component-rust-std ## Run the binary.
+run: apt-qemu-system-arm rust-target-${ARCH} rust-component-rust-std tool-probe-run ## Run the binary.
 	${CARGO} run ${MAYBE_RELEASE_FLAG} --bin ${BIN}
 
 flash: rust-target-${ARCH} rust-component-rust-std pip3-nrfutil tool-cargo-flash ## Flash the device.
 	${CARGO} flash ${MAYBE_RELEASE_FLAG} --chip ${CHIP}
-
-embed: rust-target-${ARCH} rust-component-rust-std pip3-nrfutil tool-cargo-embed ## Embed into the device.
-	${CARGO} embed ${MAYBE_RELEASE_FLAG}
 
 recover: tool-nrf-recover pip3-nrfutil ## Recover the nRF device.
 	nrf-recover -y
