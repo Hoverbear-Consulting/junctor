@@ -13,6 +13,7 @@ build = "build.rs"
 cortex-m = { version = "0.6.0", default-features = false }
 cortex-m-rt = { version = "0.6.10", default-features = false }
 alloc-cortex-m = { version = "0.4.0", default-features = false }
+cortex-m-rtic = { version = "0.5.5", default-features = false }
 rtt-target = { version = "0.2.0", default-features = false, features = ["cortex-m"] }
 nrf52840-pac = { version = "0.9.0", default-features = false, features = ["rt"] }
 nrf52840-hal = { version = "0.11.0", default-features = false, features = ["rt"] }

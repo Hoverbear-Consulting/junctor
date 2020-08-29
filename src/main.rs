@@ -22,7 +22,6 @@
 #![no_std]
 #![no_main]
 #![feature(alloc_error_handler)]
-#![warn(missing_docs)]
 
 extern crate alloc;
 
@@ -35,52 +34,40 @@ const HEAP_SIZE: usize = 10 * 1024;
 
 pub mod diagnostics;
 pub mod subscriber;
+pub mod tasks;
 
-#[cortex_m_rt::entry]
-fn main() -> ! {
-    unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
+#[rtic::app(device = nrf52840_pac, monotonic = rtic::cyccnt::CYCCNT)]
+const JUNCTOR: () = {
+    // All tasks have a common pattern:
+    // 1. Prepare params.
+    // 2. Pass params to the task module.
 
-    let mut board = nrf52840_pac::CorePeripherals::take().unwrap();
-    let rtt_channels = rtt_target::rtt_init! {
-        up: {
-            0: {
-                size: 10240
-                mode: BlockIfFull
-                name: "Terminal"
-            }
-        }
-    };
-    let rtt_channels_logger = rtt_channels.up.0;
-    let subscriber = subscriber::rtt::Subscriber::new(
-        rtt_channels_logger,
-        tracing::level_filters::LevelFilter::TRACE,
-    );
-    tracing::subscriber::set_global_default(subscriber).expect("global default was already set!");
-    diagnostics::start_message();
+    /// The initialization phase.
+    #[init]
+    fn init(mut context: init::Context) {
+        tasks::init::invoke(&mut context);
+    }
 
-    tracing::trace!(
-        peripheral = "DCB",
-        "Initializing (enable) the monotonic timer (CYCCNT)"
-    );
-    board.DCB.enable_trace();
-
-    tracing::trace!(peripheral = "DWT", "Initializing cycle counter");
-    cortex_m::peripheral::DWT::unlock();
-    board.DWT.enable_cycle_counter();
-
-    diagnostics::halt_message();
-    loop {}
-}
+    /// The main phase.
+    #[idle]
+    fn idle(mut context: idle::Context) -> ! {
+        tasks::idle::invoke(&mut context)
+    }
+};
 
 /// When facing an alloc error, we likely can't print. So we have to bail.
 #[alloc_error_handler]
 fn alloc_error(_layout: core::alloc::Layout) -> ! {
-    loop {}
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
 
 /// When panicking, attempt to log it, else bail.
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     tracing::event!(tracing::Level::ERROR, ?info, "Panicked!");
-    loop {}
+    loop {
+        cortex_m::asm::bkpt()
+    }
 }
