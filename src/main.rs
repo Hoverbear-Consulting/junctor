@@ -40,7 +40,7 @@ pub mod subscriber;
 fn main() -> ! {
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
 
-    nrf52840_pac::Peripherals::take();
+    let mut board = nrf52840_pac::CorePeripherals::take().unwrap();
     let rtt_channels = rtt_target::rtt_init! {
         up: {
             0: {
@@ -57,6 +57,16 @@ fn main() -> ! {
     );
     tracing::subscriber::set_global_default(subscriber).expect("global default was already set!");
     diagnostics::start_message();
+
+    tracing::trace!(
+        peripheral = "DCB",
+        "Initializing (enable) the monotonic timer (CYCCNT)"
+    );
+    board.DCB.enable_trace();
+
+    tracing::trace!(peripheral = "DWT", "Initializing cycle counter");
+    cortex_m::peripheral::DWT::unlock();
+    board.DWT.enable_cycle_counter();
 
     diagnostics::halt_message();
     loop {}

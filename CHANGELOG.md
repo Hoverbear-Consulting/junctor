@@ -8,6 +8,7 @@
 
 ### Features
 
+* **logging:** Use `tracing-serde` to output JSON logs. 4146157
 * **makefile:** Adopted probe-run as the runner. 87e73e1
 * **logging:** Minimal tracing support. 4d053c7
 * **makefile:** README.md generation is automatic now. 4674135

@@ -14,7 +14,8 @@ cortex-m = { version = "0.6.0", default-features = false }
 cortex-m-rt = { version = "0.6.10", default-features = false }
 alloc-cortex-m = { version = "0.4.0", default-features = false }
 rtt-target = { version = "0.2.0", default-features = false, features = ["cortex-m"] }
-nrf52840-pac = { version = "0.9.0", default-features = false }
+nrf52840-pac = { version = "0.9.0", default-features = false, features = ["rt"] }
+nrf52840-hal = { version = "0.11.0", default-features = false, features = ["rt"] }
 once_cell = { version = "1.4.0", default-features = false }
 tracing = { git = "https://github.com/Hoverbear-Consulting/tracing", branch = "tracing-serde-no-std", version = "0.1", default-features = false, features = ["attributes"] }
 tracing-serde = { git = "https://github.com/Hoverbear-Consulting/tracing", branch = "tracing-serde-no-std", version = "0.1", default-features = false }
