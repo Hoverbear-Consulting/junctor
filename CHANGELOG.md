@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-08-29)
+## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-09-03)
 
 ### ⚠ BREAKING CHANGE
 
@@ -8,6 +8,8 @@
 
 ### Features
 
+* Adopt RTIC. 7b1604d
+* **board:** Initialize monotonic timer and cycle counter. 9586ed1
 * **logging:** Use `tracing-serde` to output JSON logs. 4146157
 * **makefile:** Adopted probe-run as the runner. 87e73e1
 * **logging:** Minimal tracing support. 4d053c7

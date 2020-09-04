@@ -36,7 +36,7 @@ pub mod diagnostics;
 pub mod subscriber;
 pub mod tasks;
 
-#[rtic::app(device = nrf52840_pac, monotonic = rtic::cyccnt::CYCCNT)]
+#[rtic::app(device = nrf52840_hal::pac, peripherals = true, monotonic = rtic::cyccnt::CYCCNT)]
 const JUNCTOR: () = {
     // All tasks have a common pattern:
     // 1. Prepare params.
@@ -44,14 +44,14 @@ const JUNCTOR: () = {
 
     /// The initialization phase.
     #[init]
-    fn init(mut context: init::Context) {
-        tasks::init::invoke(&mut context);
+    fn init(context: init::Context) {
+        tasks::init::invoke(context);
     }
 
     /// The main phase.
     #[idle]
-    fn idle(mut context: idle::Context) -> ! {
-        tasks::idle::invoke(&mut context)
+    fn idle(context: idle::Context) -> ! {
+        tasks::idle::invoke(context)
     }
 };
 
