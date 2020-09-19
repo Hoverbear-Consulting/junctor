@@ -4,21 +4,49 @@
 //!
 //! Eventual goals are some mesh networking, some sensor collection, and some data processing.
 //!
-//! ## Usage
+//! ## Setup
 //!
-//! This project only supports Ubuntu 20.04 right now.
+//! This project only supports Ubuntu 20.04 and Windows 10 Pro right now.
 //!
-//! You can emulate a full CI run, which will properly set up your machine, including installing all `apt` packages, bootstrapping Rustup, setting up the necessary tools, and getting Python untangled.
+//! ### Ubuntu 20.04
+//!
+//! You can emulate a full automated CI run, which will properly set up your
+//! machine, including installing all `apt` packages, bootstrapping Rustup, setting up the necessary
+//! tools, and getting Python untangled.
 //!
 //! ```bash
-//! make ci
+//! make ci PREREQS=true
 //! ```
+//!
+//! ### Windows 10 Pro
+//!
+//! > **Note:** Windows support is preliminary.
+//!
+//! You'll need to install the [Visual Studio C++ Build Tools], [Zadig], and [scoop] yourself.
+//!
+//! **Plug in your nRF52 DK.** Open Zadig, enable "Options -> List all
+//! Devices", select "Bulk Interface (Interface 2)", ensure the driver says "jlink" and the
+//! **USB ID says "1366 1015"** plus (probably) "02". Let it select "WinUSB" as the default, and
+//! hit "Replace driver". You can now unplug your nRF52 DK again.
+//!
+//! Then, please bootstrap your toolchain in Powershell:
+//!
+//! ```powershell
+//! scoop install rustup busybox make gawk python
+//! make ci PREREQS=true
+//! ```
+//!
+//! ## Usage
 //!
 //! Once you've done that, I suggest you enjoy the `make help` command.
 //!
-//! If you're on Ubuntu 20.04, these should all just work and I'd love it if you reported a bug if they didn't.
+//! these should all just work and I'd love it if you reported a bug if they didn't.
 //!
 //! 😊
+//!
+//! [Visual Studio C++ Build Tools]: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+//! [Zadig]: https://zadig.akeo.ie/
+//! [scoop]: https://scoop.sh/
 #![no_std]
 #![no_main]
 #![feature(alloc_error_handler)]

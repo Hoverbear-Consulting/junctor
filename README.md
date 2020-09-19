@@ -9,18 +9,37 @@ Right now, this is just a project that is slowly evolving as I learn through som
 
 Eventual goals are some mesh networking, some sensor collection, and some data processing.
 
-### Usage
+### Setup
 
-This project only supports Ubuntu 20.04 right now.
+This project only supports Ubuntu 20.04 and Windows 10 Pro right now.
 
-You can emulate a full CI run, which will properly set up your machine, including installing all `apt` packages, bootstrapping Rustup, setting up the necessary tools, and getting Python untangled.
+#### Ubuntu 20.04
+
+You can emulate a full automated CI run, which will properly set up your
+machine, including installing all `apt` packages, bootstrapping Rustup, setting up the necessary
+tools, and getting Python untangled.
 
 ```bash
-make ci
+make ci PREREQS=true
 ```
+
+#### Windows 10 Pro
+
+> **Note:** Windows support is preliminary.
+
+You'll need to install [Zadig](https://zadig.akeo.ie/]) and [scoop](https://scoop.sh) yourself.
+
+Then, please bootstrap your toolchain in Powershell:
+
+```powershell
+scoop install rustup busybox make gawk python
+make ci PREREQS=true
+```
+
+### Usage
 
 Once you've done that, I suggest you enjoy the `make help` command.
 
-If you're on Ubuntu 20.04, these should all just work and I'd love it if you reported a bug if they didn't.
+these should all just work and I'd love it if you reported a bug if they didn't.
 
 😊

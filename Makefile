@@ -3,22 +3,39 @@
 export RELEASE ?= false ## Release mode.
 export OPEN ?= false ## Open generated documentation.
 export CHECK ?= false ## Prefer checks to mutations.
-export PREREQS ?= true ## Provision preresuites as needed.
+export PREREQS ?= false ## Provision preresuites as needed.
 export BIN ?= junctor ## Main binary name.
 export ARCH ?= thumbv7em-none-eabihf ## Rust compile target.
 export CHANNEL ?= nightly ## Rust channel to use.
 export CHIP ?= nRF52840_xxAA ## Flash/embed target.
-export OS ?= ubuntu-20.04 ## The hosting OS. (ubuntu-20.04 is supported.)
+
+
+# "One weird trick!" https://www.gnu.org/software/make/manual/make.html#Syntax-of-Functions
+EMPTY:=
+SPACE:= ${EMPTY} ${EMPTY}
 
 # Pretty stuff!
-FORMATTING_BEGIN_TASK = \033[0;33m
-FORMATTING_BEGIN_KNOBS = \033[0;93m
-FORMATTING_BEGIN_CONFIGURED = \033[1;36m
-FORMATTING_BEGIN_DEFAULT = \033[0;36m
-FORMATTING_BEGIN_HEADING = \033[1;32m
-FORMATTING_BEGIN_HINT = \033[0;90m
-FORMATTING_BEGIN_COMMAND = \033[1;37m
-FORMATTING_END = \033[0m
+ifeq ($(OS),Windows_NT) # is Windows_NT on XP, 2000, 7, Vista, 10...
+    FORMATTING_BEGIN_TASK = ${EMPTY}
+    FORMATTING_BEGIN_KNOBS = ${EMPTY}
+    FORMATTING_BEGIN_CONFIGURED = ${EMPTY}
+    FORMATTING_BEGIN_DEFAULT = ${EMPTY}
+    FORMATTING_BEGIN_HEADING = ${EMPTY}
+    FORMATTING_BEGIN_HINT = ${EMPTY}
+    FORMATTING_BEGIN_COMMAND = ${EMPTY}
+    FORMATTING_END = ${EMPTY}
+else
+    FORMATTING_BEGIN_TASK = \033[0;33m
+    FORMATTING_BEGIN_KNOBS = \033[0;93m
+    FORMATTING_BEGIN_CONFIGURED = \033[1;36m
+    FORMATTING_BEGIN_DEFAULT = \033[0;36m
+    FORMATTING_BEGIN_HEADING = \033[1;32m
+    FORMATTING_BEGIN_HINT = \033[0;90m
+    FORMATTING_BEGIN_COMMAND = \033[1;37m
+    FORMATTING_END = \033[0m
+endif
+
+
 define AWK
 	@gawk \
 		-v FORMATTING_BEGIN_TASK="${FORMATTING_BEGIN_TASK}" \
@@ -40,7 +57,8 @@ override MAYBE_CHECK_FLAG = $(if $(findstring true,$(CHECK)),--check,)
 override ROOT_DIR = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 override CARGO = cargo +$(strip ${CHANNEL})
 override CANONICAL_TOOLCHAIN = $(strip ${CHANNEL})-$(strip ${ARCH})
-export PATH += $(if $(findstring true,$(PREREQS)),:${HOME}/.cargo/bin,)
+export PATH +=$(if $(findstring true,$(PREREQS)),:~/.cargo/bin,)
+export PATH +=$(if $(findstring Windows_NT,$(OS)),:~/scoop/shims,)
 
 help: ## Print this message.
 	@printf -- "\n"
@@ -82,7 +100,7 @@ clean: ## Clean up the working environment.
 ##@ Hardware
 .PHONY := run flash embed recover
 
-run: apt-qemu-system-arm rust-target-${ARCH} rust-component-rust-std tool-probe-run ## Run the binary.
+run: rust-target-${ARCH} rust-component-rust-std tool-probe-run ## Run the binary.
 	${CARGO} run ${MAYBE_RELEASE_FLAG} --bin ${BIN}
 
 flash: rust-target-${ARCH} rust-component-rust-std pip3-nrfutil tool-cargo-flash ## Flash the device.
@@ -106,7 +124,7 @@ lint: rust-target-${ARCH} rust-component-clippy ## Run linting pass.
 conventional: tool-convco ## Ensures the commits are all conventional.
 	convco check
 
-version: tool-convco apt-jq apt-gawk ## Sync version to Cargo.
+version: tool-convco ## Sync version to Cargo.
 	$(eval override CARGO_VERSION = $(shell ${CARGO} pkgid | gawk --file hack/version.awk))
 	$(eval override CONVCO_VERSION = $(shell convco version))
 	$(if $(findstring true,$(CHECK)),@test "${CARGO_VERSION}" = "${CONVCO_VERSION}",)
@@ -207,30 +225,59 @@ reset: # (Hidden from users) This resets the repo completely back to a squashed 
 
 ci: prerequisites format lint audit conventional version readme changelog build document ## Run the CI pass locally.
 
-prerequisites: apt-gawk apt-make apt-curl apt-git apt-build-essential apt-pkg-config apt-libusb-1.0-0-dev apt-libudev-dev apt-libssl-dev apt-python3-pip rustup rust-component-llvm-tools-preview inject-hooks ## Bootstrap the machine.
+ifeq ($(OS),Windows_NT) # is Windows_NT on XP, 2000, 7, Vista, 10...
+prerequisites:
+	${EMPTY} # User are on their own here, sadly. It's just too hard to bootstrap everything. PRs welcome.
+else # Linux, etc...
+prerequisites: package-gawk package-make package-curl package-git package-pkg-config rustup rust-component-llvm-tools-preview package-jq package-gawk inject-hooks ## Bootstrap the machine.
 	$(if $(findstring true,$(PREREQS)),@bash ./distribution/bootstraps/ubuntu-20.04.sh,)
+endif
+
 
 ##@ Hooks
 .PHONY := inject-hooks hook-pre-commit
 
+ifeq ($(OS),Windows_NT) # is Windows_NT on XP, 2000, 7, Vista, 10...
 inject-hooks: ## Inject the git hooks used.
+	@ln \
+		-f \
+		hack/git/hooks/pre-commit .git/hooks/pre-commit
+else # Linux, etc...
+inject-hooks:
 	@ln \
 		--symbolic \
 		--force \
 		../../hack/git/hooks/pre-commit .git/hooks/pre-commit
+endif
 
 hook-pre-commit: override CHECK = true
 hook-pre-commit: ci
 
 # Tools
-.PHONY := apt-% tool-% rust-component-% rust-toolchain-% rust-target-% rustup
+.PHONY := package-% tool-% rust-component-% rust-toolchain-% rust-target-% rustup
 
-apt-%: override PACKAGE = $(@:apt-%=%)
-apt-%:
+ifeq ($(OS),Windows_NT) # is Windows_NT on XP, 2000, 7, Vista, 10...
+
+package-%: override PACKAGE = $(@:package-%=%)
+package-%:
+	$(if $(findstring true,$(PREREQS)),scoop install ${PACKAGE},)
+
+rustup:
+    ${EMPTY}
+
+else # Linux, etc...
+
+package-%: override PACKAGE = $(@:package-%=%)
+package-%:
 	$(if $(findstring true,$(PREREQS)),sudo apt install ${PACKAGE} --yes -qqq,)
 
+rustup:
+	$(if $(findstring true,$(PREREQS)),curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet,)
+
+endif
+
 pip3-%: override PACKAGE = $(@:pip3-%=%)
-pip3-%: apt-python3-pip
+pip3-%: package-python3-pip
 	$(if $(findstring true,$(PREREQS)),pip3 install ${PACKAGE} --user -qqq,)
 
 tool-%: override TOOL = $(@:tool-%=%)
@@ -248,6 +295,3 @@ rust-component-%: rust-toolchain-${CHANNEL}
 rust-target-%: override ARCH = $(@:rust-target-%=%)
 rust-target-%: rust-toolchain-${CHANNEL}
 	$(if $(findstring true,$(PREREQS)),rustup target add ${ARCH} --toolchain ${CHANNEL},)
-
-rustup:
-	$(if $(findstring true,$(PREREQS)),curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet,)

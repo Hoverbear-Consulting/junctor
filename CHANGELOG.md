@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-09-03)
+## [Unreleased](https://github.com/Hoverbear-Consulting/junctor/compare/v0.1.0...HEAD) (2020-09-04)
 
 ### ⚠ BREAKING CHANGE
 

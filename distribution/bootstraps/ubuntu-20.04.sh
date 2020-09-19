@@ -16,3 +16,5 @@ ATTRS{idVendor}=="1366", ATTRS{idProduct}=="1015", TAG+="uaccess"
 EOF
 
 sudo udevadm control --reload-rules
+
+sudo apt install --yes --quiet build-essential libusb-1.0-0-dev libudev-dev libssl-dev python3-pip
