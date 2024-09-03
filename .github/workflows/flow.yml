@@ -81,13 +81,13 @@ jobs:
     steps:
 
       - name: Download junctor
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: junctor
           path: junctor
 
       - name: Download CHANGELOG.md
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: CHANGELOG.md
           path: CHANGELOG.md
